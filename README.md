@@ -57,6 +57,8 @@ npm run build
 
 `verify-ui.mjs` exercises the real browser path with installed Chrome: buggy run, four properties, corrected rerun, stale export blocking, clipboard, downloaded regression, reset, invalid output, disabled/duplicate rules, typed requirements and mobile overflow. Run with a local server: `DEMO_URL=http://localhost:3107 node verify-ui.mjs` (PowerShell: `$env:DEMO_URL='http://localhost:3107'; node verify-ui.mjs`). It creates local QA screenshots and a downloaded test. `node verify-export.mjs` then checks that this exact downloaded export fails on the bug and passes with corrected source. Test configuration keeps these intentional failing export files out of `npm test`.
 
+Set `QA_DIR` to an absolute folder outside the repository to keep browser screenshots and the downloaded test out of source control. The browser script defaults to port 3107, matching `npm start`. The export verifier reads the downloaded test from its working directory and needs access to this project's installed dependencies.
+
 ## Architecture and future extraction
 
 - `src/lib/rules.ts`: Zod contract, template labels, predicates and demos.
