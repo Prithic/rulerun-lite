@@ -18,6 +18,7 @@ try{
  const run=()=>spawnSync(process.execPath,[fileURLToPath(new URL('./node_modules/vitest/vitest.mjs',import.meta.url)),'run','--config',config],{encoding:'utf8',timeout:60000});
  const buggy=run();
  if(buggy.status!==1||!buggy.stdout.includes(`${cases.length} failed`))throw Error(buggy.stdout+buggy.stderr);
+ if((buggy.stderr.match(/AssertionError:/g)||[]).length!==cases.length)throw Error('Export failed without the expected property assertion failures:\n'+buggy.stdout+buggy.stderr);
  console.log(`Captured buggy export: ${cases.length} actual assertion failures (expected).`);
  if(!/^const source = .*;$/m.test(original))throw Error('Captured source missing');
  await fs.writeFile(fixture,original.replace(/^const source = .*;$/m,()=>`const source = ${JSON.stringify(corrected)};`));
