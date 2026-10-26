@@ -1,5 +1,7 @@
 # Submission readiness
 
+Latest audit: [FINAL_QA_REPORT.md](FINAL_QA_REPORT.md). The final application has 29 passing unit tests and a verified generated-rounding demo. The submission still needs the manual materials below. Per the latest user instruction, GitHub visibility was left unchanged and audited fixes were not pushed.
+
 Checked 26 October 2026 from the standalone Wispr challenge project.
 
 ## Application: ready for demonstration

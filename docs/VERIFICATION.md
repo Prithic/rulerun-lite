@@ -1,5 +1,7 @@
 # RuleRun Lite verification
 
+This is the original delivery record. For the independently rechecked release, 29-test suite, updated deployment, source-hash comparison and remaining limitations, see [FINAL_QA_REPORT.md](FINAL_QA_REPORT.md).
+
 Verified on 26 October 2026. No model integration, API key, account or database is required.
 
 ## Delivered deployment
