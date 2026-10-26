@@ -18,7 +18,7 @@ Open http://localhost:3107. For production: `npm run build` then `npm start`.
 ## Try the complete workflow
 
 1. The buggy `discount(price, percent)` function and four rules load automatically.
-2. Type requirements, dictate with a supported browser, or use Wispr/device keyboard dictation in the requirements field. Notes are not automatically translated into properties. Review, select, and enable supported executable rules explicitly.
+2. Type requirements, dictate with a supported browser, or use Wispr/device keyboard dictation in the requirements field. Choose **Suggest rules from notes** to match supported phrases locally, review the suggested templates and unmapped notes, then explicitly apply the suggestions. Rules can also be selected manually; arbitrary prose is not automatically tested.
 3. Run checks. The real engine finds `discount(0, 100) === -100`, violating non-negativity and the full-discount property. No output is precomputed or displayed before execution.
 4. Select any result to inspect its input, required condition, observed output, seed and replay path. Copy a repair prompt, copy a regression test, or download `discount.regression.test.ts`.
 5. Load the corrected sample. Previous results become stale and export is disabled. Run again: the same enabled rules and seed execute against the corrected source.
@@ -29,14 +29,14 @@ The **Demo** selector also offers a whole-dollar rounding defect. Its explicit b
 
 ## Supported contract and limits
 
-- One synchronous pure JavaScript function expression: `function discount(price, percent) { ... }` or `(price, percent) => ...`. No exports, imports, files, repository access, or module dependencies.
+- One synchronous pure JavaScript function: `function discount(price, percent) { ... }`, `(price, percent) => ...`, or a `const`/`let`/`var discount` assignment to either supported function form. No exports, imports, files, repository access, or module dependencies.
 - Two finite numeric inputs: price **0–10,000** in 0.01 steps, percent **0–100** in 0.01 steps. Negative prices, percentages outside this range, objects, strings, arrays, async functions, DOM and I/O are outside scope.
 - Return a finite number. Exceptions, promises, NaN, Infinity, invalid syntax, unsupported source, duplicate rules and zero enabled rules produce errors, never success.
 - Four reviewed templates: non-negative output; 0% identity; 100% zero; output bounded by original price. Equality and upper bound use absolute tolerance `1e-7`; non-negativity is strict. Rules can be enabled/disabled and changed through the selectors. Each kind must be unique.
 - Every enabled property uses fast-check with fixed seed **20261026**, a 200-run budget including fixed boundary examples and deterministic generated integer-backed decimal inputs. Checks stop and shrink on failure, so failed properties execute fewer than 200 main runs; shrinking can execute additional calls. Results display the actual main-run count. Dependency versions are locked for replay stability.
-- A passing bounded property run is evidence, not an exhaustive proof. Floating-point arithmetic applies. The function must be deterministic and free of side effects; arbitrary purity is not statically proven. Date and Math.random are disabled. Each input creates a new function closure; ambient mutation of QuickJS globals is outside the pure-function contract.
+- A passing bounded property run is evidence, not an exhaustive proof. Floating-point arithmetic applies. The function must be deterministic and free of side effects; arbitrary purity is not statically proven. Date and Math.random are disabled. The function is compiled once per run and reused across cases; closure/global mutation is outside the pure-function contract.
 - Finite outputs are validated outside the guest VM, so changing guest intrinsics cannot bypass that check. If a final counterexample rerun passes its property, the engine rejects the inconsistent run rather than displaying it as a failure. This is a consistency guard, not a complete purity proof.
-- Requirements text is intentionally separate from executable templates. Unsupported prose is never silently interpreted or claimed tested.
+- Requirements text remains separate from executable templates. Local phrase matching suggests only the four supported templates and requires review/apply; it is not a general language model. Unmapped notes are shown for review. Changing notes or executable rules marks prior results stale.
 
 ## Security boundaries
 
