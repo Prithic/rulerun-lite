@@ -40,7 +40,15 @@ await page.getByRole('textbox',{name:'Your requirements'}).fill('Discounts shoul
 await page.getByRole('button',{name:'Run checks',exact:true}).click();await expect(page.getByRole('status')).toContainText('properties violated',{timeout:20000});
 if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('Mobile overflow');
 await page.screenshot({path:path.join(qaDir,'qa-mobile.png'),fullPage:true});
-console.log(JSON.stringify({verified:['real counterexample','four properties','corrected rerun','stale exports blocked','clipboard test','clipboard repair prompt','download','reset','nonfinite errors','disabled rules validation','duplicate rules validation','mobile typed requirements','mobile no overflow'],browserErrors:errors}));
+await page.getByRole('button',{name:'Reset demo'}).click();
+await page.getByRole('textbox',{name:'Your requirements'}).fill('The result is never negative. Free shipping on orders over $50.');
+await page.getByRole('button',{name:'Suggest rules from notes'}).click();
+await expect(page.getByRole('region',{name:'Suggested rules review'})).toContainText('The result is never negative');
+await expect(page.getByRole('region',{name:'Suggested rules review'})).toContainText('Free shipping on orders over $50');
+await page.getByRole('button',{name:'Apply suggested rules'}).click();
+await expect(page.getByRole('checkbox',{name:'Enable rule 1'})).toBeChecked();
+await expect(page.getByRole('checkbox',{name:'Enable rule 2'})).not.toBeChecked();
+console.log(JSON.stringify({verified:['real counterexample','four properties','corrected rerun','stale exports blocked','clipboard test','clipboard repair prompt','download','reset','nonfinite errors','disabled rules validation','duplicate rules validation','mobile typed requirements','rule suggestion review','mobile no overflow'],browserErrors:errors}));
 if(errors.length)throw Error(errors.join('\n'));
 await browser.close();
 

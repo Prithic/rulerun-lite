@@ -56,3 +56,22 @@ it('enforces sandbox host boundaries and stack/memory limits',async()=>{
   await expect(runChecks(`function discount(price, percent) { ${body} }`,initialRules)).rejects.toThrow();
  }
 },10000);
+
+it('supports common const discount assignment forms',async()=>{
+ const passing='const discount = (price, percent) => price * (1 - percent / 100);';
+ const run=await runChecks(passing,initialRules);
+ expect(run.results.every(r=>r.passed)).toBe(true);
+
+ const failing='const discount = (price, percent) => price - percent;';
+ const failRun=await runChecks(failing,initialRules);
+ expect(failRun.results.map(r=>r.passed)).toEqual([false,true,false,true]);
+});
+
+it('handles repeated sequential execution across successes, failures, exceptions and timeouts cleanly',async()=>{
+ expect((await runChecks(corrected,initialRules)).results.every(r=>r.passed)).toBe(true);
+ expect((await runChecks(buggy,initialRules)).results.some(r=>!r.passed)).toBe(true);
+ await expect(runChecks('function discount(price, percent) { throw Error("boom"); }',initialRules)).rejects.toThrow('boom');
+ await expect(runChecks('function discount(price, percent) { while(true){} }',initialRules)).rejects.toThrow();
+ expect((await runChecks(corrected,initialRules)).results.every(r=>r.passed)).toBe(true);
+},20000);
+

@@ -1,2 +1,2 @@
 import {runChecks} from './engine';
-self.onmessage=async e=>{try{self.postMessage({ok:true,value:await runChecks(e.data.source,e.data.rules)});}catch(error){const message=error instanceof Error?error.message:'Execution failed';self.postMessage({ok:false,error:/Aborted\(|Assertion failed/.test(message)?'The isolated engine reached a resource limit. Simplify the function and try again.':message});}};
+self.onmessage=async e=>{try{self.postMessage({ok:true,value:await runChecks(e.data.source,e.data.rules,e.data.spec)});}catch(error){const message=error instanceof Error?error.message:'Execution failed';self.postMessage({ok:false,error:/Aborted\(|Assertion failed/.test(message)?'The isolated engine reached a resource limit. Simplify the function and try again.':message});}};

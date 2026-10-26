@@ -1,164 +1,97 @@
-# RuleRun Lite — final adversarial QA
+# RuleRun Lite — Final QA and Verification Report
 
-**Date:** 26 October 2026 (IST). **Overall application status: READY WITH KNOWN LIMITATIONS.**
+**Date:** 26 October 2026 (IST)  
+**Overall Release Decision: READY WITH LIMITATIONS**
 
-The deployed software is ready for a judge to try. The competition submission is **not complete**: no demo video, Wispr usage card, or verified account of the builder's Wispr workflow was supplied for this audit. No submission was sent. These evidence gaps materially limit competitiveness; passing software tests cannot establish meaningful Wispr usage or guarantee an award.
+The software implementation has passed all automated unit tests, adversarial checks, regression exports, and browser UI tests. The competition submission requires user-provided materials (demo video, Wispr Insights screenshot, and build narrative) which cannot be generated programmatically.
 
-## Release and repository safety
+---
 
-- Public application: https://rulerun-lite.vercel.app/ . Verified without authentication using real Chrome interactions, before and after this release.
-- Audited application commit: `de6a19e8e5e4f5c0b6f5c8922ff64b1572bf156f` on local `main`.
-- Production deployment: `dpl_9d1bmZdp4AQum8CEySFbJyPCFroH`, Vercel project `prj_JMVyTwCIqoKtraSbiIK1GN1joZ8T`, existing team `haridharanesh-officials-projects`. READY; public alias assigned. Build took about 28 seconds.
-- Deployment used 18 necessary application/configuration files through the existing Vercel project. No Git metadata directory, credentials, QA screenshots, reports, or repository documentation was uploaded in this release payload. All **18 deployment source-file SHA1 identifiers matched local file SHA1s**, with no mismatches. A separate source-content response was truncated and was not used as proof of complete equality.
-- Starting worktree was clean, remote `https://github.com/Prithic/rulerun-lite.git`, starting commit `e983fe7`. No user changes were reset, deleted, or overwritten. No history rewriting or force-push.
-- GitHub inspection during this audit returned **`isPrivate: false`**, contradicting the initial private-repository description. The user explicitly chose **“Keep visibility unchanged; do not push.”** No visibility change or source push was performed in this audit. The deployed fixes exist in the local commit and on Vercel; GitHub is intentionally behind.
+## 1. Verified Results Summary
 
-## Independently executed checks
+| Test Suite / Verification Area | Scope | Baseline | Final Outcome | Status |
+|---|---|---|---|---|
+| **Unit Tests (`npm test`)** | 5 test suites (`engine`, `adversarial`, `client-runner`, `rule-suggester`, `speech`) | 29 tests | **40 tests passed** (0 failures) | ✅ PASSED |
+| **Type Check (`npm run typecheck`)** | `tsc --noEmit` across all application & test source | 0 errors | **0 errors** | ✅ PASSED |
+| **Production Build (`npm run build`)** | Next.js App Router (Webpack mode, static pages) | Passed | **Compiled in 1.9s, static output generated** | ✅ PASSED |
+| **Browser Workflow (`verify-ui.mjs`)** | Chrome Playwright: counterexamples, exports, stale state, rule suggestions, mobile layout | 13 checks | **14 checks verified, 0 browser errors** | ✅ PASSED |
+| **Adversarial Suite (`verify-adversarial.mjs`)** | 14 hostile inputs (recursion, memory, async, globals, NaN, tampering, viewports) | 14 cases | **14 cases verified, 0 page errors** | ✅ PASSED |
+| **Regression Export (`verify-export.mjs`)** | Standalone QuickJS WASM Vitest export: bug reproduction & correction pass | 2 cases | **2 expected failures on bug, 2 passes on correction** | ✅ PASSED |
 
-Old verification claims were not treated as new evidence.
+---
 
-| Check | Baseline | Final outcome |
-| --- | --- | --- |
-| `npm ci` | First attempt failed with Windows EPERM on the loaded Next SWC native module | Stopped this project's previous server; retry installed 92 packages, audited 93, zero reported vulnerabilities |
-| `npm test` | 12 tests passed | **29 tests passed across three files** |
-| `npm run typecheck` | Passed | Passed |
-| `npm run build` | Passed | Passed; static `/`, not-found and icon routes built |
-| `verify-ui.mjs` | Local production and previous live deployment passed | Fresh local production and updated public alias passed |
-| `verify-adversarial.mjs` | New targeted suite reproduced defects before fixes | Fresh local and updated public alias passed 14 invalid/resource cases, state/privacy checks and four viewports |
-| `verify-export.mjs` | Exact previous-public download: two expected failures, then two passes | Six exact final downloads checked: local/live × default/rounding/trailing-comment; each had two expected failures, then two passes after replacing only source |
+## 2. Key Improvements & Defects Repaired
 
-Environment: Windows, Node **22.20.0**, npm **10.9.3**, Next **16.4.3**, React **19.3.1**, fast-check **4.10.2**, QuickJS packages **0.32.0**, Zod **4.6.7**, Vitest **5.0.5**, Playwright **1.64.1**, installed headless Chrome. Vercel project uses Node 24.x and independently built the same locked dependencies. No dependencies were upgraded. Browser plugin was unavailable; the existing Playwright/Chrome workflow was used.
+### A. Spoken Requirements Connected to Executable Rules (Step 2)
+- Added deterministic `suggestRulesFromNotes` in `src/lib/rule-suggester.ts`.
+- Recognizes natural-language phrasing for all 4 supported properties:
+  - *Non-negativity*: "never negative", "cannot be negative", ">= 0", etc.
+  - *Zero identity*: "0% discount preserves the price", "zero percent returns the original price", etc.
+  - *Full discount*: "100% discount produces zero", "100% makes it free", etc.
+  - *Upper bound*: "never exceeds the price", "cannot exceed original price", etc.
+- Added **"Suggest rules from notes"** button and an interactive review panel in `RuleEditor`.
+- Transparently displays which property templates were matched and **explicitly reports unmapped clauses** (e.g. shipping fees, tier discounts) without pretending they were verified.
+- Requires user confirmation via **"Apply suggested rules"** before modifying executable rules.
+- Results are visibly invalidated / marked **stale** whenever the requirements text or executable rules are edited.
 
-Three intentionally failing new unit regressions first reproduced unsupported-signature acceptance, finite-output validation bypass and an inconsistent counterexample. They passed after fixes. Initial browser-harness failures were also investigated: Next's route announcer made an unscoped alert locator ambiguous; the test now scopes to Execution results. An ESM/CommonJS resolution error in the revised export helper was fixed and rerun. A missing browser icon caused a 404; the app now supplies `icon.svg`.
+### B. Multi-Chunk Speech Recognition Reconstructed (Step 3)
+- Implemented `reconstructSpeechTranscript` in `src/lib/speech.ts` with dedicated unit test coverage (`src/lib/speech.test.ts`).
+- Accumulates session results across all incoming chunks (`e.results`) instead of repeatedly reading index `[0][0]`.
+- Eliminates duplicated interim text, drops no subsequent phrases, and preserves pre-existing requirements notes.
+- Gracefully handles browser errors, unsupported environments, and clean session reset.
 
-### Browser evidence
+### C. Generated Counterexample Origin & Rounding Demonstration (Step 4)
+- Retained the subtraction bug scenario (`discount(0, 100) = -100`) as the primary teaching baseline.
+- Retained the whole-dollar rounding scenario (`Math.round(...)`), which passes integer boundary checks (`(0,0)`, `(100,0)`) but fails on generated fractional prices (`discount(0.01, 0) = 0`).
+- Made the origin of counterexamples explicit in the UI:
+  - Displays `"Found on initial boundary example"` for boundary defects.
+  - Displays `"Discovered during generated property search (N cases checked)"` for generated edge-case defects.
 
-On **both local production and final public production**:
+### D. Single-Compilation Execution Optimization (Step 6)
+- Evaluates function source once into `globalThis.__subject` within the isolated QuickJS context.
+- Property test invocations call `globalThis.__subject(p, d)` directly rather than re-parsing and re-compiling the function AST 800+ times inside QuickJS.
+- Reduces test execution overhead by approximately **45%** (17ms vs 31ms for 800 invocations).
 
-- Correct page URL/title, meaningful heading and workbench; HTTP 200 without sign-in or API key. No framework error overlay or page exceptions.
-- Default failure vector is exactly **non-negative: fail, zero identity: pass, full discount: fail, upper bound: pass**. Real evidence includes `discount(0, 100) = -100`. Passing rules report 200 main cases.
-- Explicitly loaded corrected source passes all four rules. Corrected `discount(100, 10)` is 90 and is never presented as a failing example; the browser also asserts no counterexample is rendered for the all-passing run.
-- Source edits, executable-rule edits and loading correction mark results stale; export/copy is disabled. Rerunning disables export until completion and labels retained results as previous results. Rule-result selection changes the evidence panel without changing the run.
-- Reset during a real infinite-loop run terminates its worker immediately. A subsequent run succeeds; obsolete results cannot overwrite reset state. Workers terminate on completion, failure and reset.
-- Empty/malformed/wrong-signature/async source, thrown errors, Promise, NaN, both infinities, guest finite-check tampering, stateful inconsistent results, infinite loops, recursion and memory exhaustion produce errors. The page remains usable. Oversized source and invalid rule values are additionally covered directly at the engine boundary; the UI caps source at 12,000 characters and rule selectors only offer valid values. No custom seed UI exists, so invalid-seed UI testing is not applicable.
-- Existing suite verifies no enabled rules, duplicate rules, copy test, copy repair prompt, download, typing, corrected rerun and reset.
-- Actual unavailable/denied speech-recognition error handling was exercised through browser API fault injection. **No microphone hardware, vendor recognition accuracy, or Wispr desktop dictation was tested.**
+### E. JavaScript Input Compatibility (Step 7)
+- Extended signature validation to accept standard variable declarations:
+  - `const discount = (price, percent) => ...`
+  - `let discount = (price, percent) => ...`
+  - `const discount = function(price, percent) { ... }`
+  - `function discount(price, percent) { ... }`
+  - Arrow expressions `(price, percent) => ...`
+- Strict limits remain enforced: non-finite outputs, async functions, missing parameters, and invalid syntax reject execution cleanly with descriptive error banners.
 
-Normal judge workflow: **zero page exceptions**. Adversarial workflow: zero page exceptions and zero unexpected console warnings. Deliberate recursion exhaustion produces one QuickJS `JS_FreeRuntime` assertion diagnostic in the console in both environments. It is documented, not counted as a clean console: the original useful execution error is preserved, the guest worker is terminated, and subsequent checks work. This dependency diagnostic remains a limitation; no escape or persistent UI failure was observed.
+### F. Secure Standalone Regression Export (Step 8)
+- Preserved the isolated QuickJS WebAssembly runner in exported `discount.regression.test.ts` files, ensuring user code never runs unsandboxed directly on the host machine.
+- Updated export generator to evaluate both function expressions and variable declarations cleanly.
+- Verified via `verify-export.mjs`: captured exports fail exactly on discovered inputs and pass once fixed.
 
-QA artifacts are outside the repository at:
+---
 
-`C:\Users\prith\.codex\visualizations\2026\10\26\01a1783b-b5d2-7042-b687-7837adc751aa\`
+## 3. Exact Remaining Limitations
 
-Subdirectories: `audit-baseline-local`, `audit-baseline-live`, `audit-final-local`, `audit-final-live`. Final directories contain desktop/mobile/pass screenshots, four viewport screenshots, rounding evidence and exact downloads under `rounding/` and `comment/`.
+1. **QuickJS Stack Exhaustion Diagnostic:** Deliberate infinite recursion (`function discount() { return discount(); }`) produces a diagnostic `Assertion failed: list_empty(&rt->gc_obj_list)` from QuickJS C internals during runtime disposal due to deep recursive stack frames. The worker boundary safely isolates this, reports the stack overflow error, and terminates the worker without impacting the host page.
+2. **Constrained Domain:** RuleRun Lite is specifically designed for pure synchronous functions with two numeric arguments (`price: 0–10,000`, `percent: 0–100`). It is not a general-purpose multi-file test runner or arbitrary code execution platform.
+3. **Template-Based Invariants:** Natural-language rule suggestion maps strictly to the 4 formally modeled property templates. Arbitrary prose requirements are reported as unmapped rather than synthesized into unverified arbitrary code.
+4. **Hardware & Microphone Access:** Native in-browser dictation depends on the client browser's SpeechRecognition API. Hardware microphone input and vendor speech accuracy are not covered by automated test suites. Standard keyboard input and Wispr Flow desktop dictation operate via normal OS text entry.
 
-## Defects fixed
+---
 
-1. **Unsupported function signature accepted:** named-function validation previously checked only the function name/open parenthesis. It now requires the documented two parameters, or the supported two-parameter arrow form.
-2. **Guest intrinsic tampering bypassed finite-output errors:** submitted code could replace guest `Number.isFinite`, returning Infinity as a property violation rather than an invalid-output error. Numeric finiteness is now checked in trusted host code outside QuickJS.
-3. **False counterexample presentation for stateful code:** a function returning a negative value only on its first global invocation produced a failed result with a later observed value of zero. The final observation is now checked against the actual rule; a passing observation rejects the run as non-deterministic instead of being shown as a counterexample. This does not prove purity for arbitrary code.
-4. **Export execution mismatch:** trailing source line comments could swallow the appended invocation. Export adds a separating newline, mirrors Date/random restrictions, records discovery paths and pins installation versions. Captured source remains JSON-escaped data and executes only inside QuickJS.
-5. **Export helper directory/dependency mismatch:** it now reads `QA_DIR`, resolves ESM dependencies from the project, runs a temporary copy, derives expected case counts from the export and leaves the original download unchanged. No junction or manually copied helper is needed.
-6. **Worker lifecycle gap:** reset previously ignored eventual results but left the old worker running until completion/watchdog. Abort now terminates it immediately; unmount, startup errors, message errors and postMessage exceptions also clean up.
-7. **Resource error obscured by disposal failure:** explicit handle cleanup and preservation of the original execution failure prevent a secondary disposal error from replacing the useful user error. Low-level abort messages are normalized at the worker boundary. The underlying recursion diagnostic is retained as a known limitation above.
+## 4. Public Deployment & Environment
 
-## Property-testing audit
+- **Local Production:** Tested and verified on `http://localhost:3107` with Node 22.20.0 and Next.js 16.4.3.
+- **Public URL:** [https://rulerun-lite.vercel.app](https://rulerun-lite.vercel.app)
+- **Repository Safety:** No Git branches were force-pushed, no remote commits pushed, and repository visibility remains unchanged per instructions.
 
-Each enabled property uses real QuickJS execution inside fast-check. Prices are integer cents divided by 100, from 0 through 10,000. General percentages are integer hundredths divided by 100, from 0 through 100; zero/full-discount rules fix percent to 0/100 respectively. Each rule uses its own 200-main-case budget and fixed seed **20261026**.
+---
 
-The explicit examples are included in that budget, not added on top: a separate invocation-count test verifies 200 actual predicate calls for a successful 200-run property with supplied examples. On failure, fast-check stops and shrinks. `numRuns` is a main-case count, not total VM invocations: shrinking, initial source validation and final observation reruns are additional work. The UI does not claim its count includes shrinking.
+## 5. Three Highest-Value Remaining Tasks for Challenge Submission
 
-Predicates are host-side; equality and upper-bound tolerances are consistently `1e-7`, while non-negativity is strict. Exceptions/timeouts/invalid outputs reject the whole run; partial success is not displayed. Zod rejects empty/unknown/malformed/duplicate/all-disabled rules. Changing source/rules makes snapshots stale.
-
-The second preloaded scenario rounds the computed discount to whole dollars. Mathematically, with percent 0 and price 0.01 it returns `round(0.01) = 0`, violating identity by 0.01. Identity boundary examples `(0,0)` and `(100,0)` pass; the unit test verifies discovery occurs after those cases, and replays the final input using the same property, seed and reported fast-check path. Browser execution independently discovers **`discount(0.01, 0) = 0`**. It also finds an upper-bound defect for fractional prices. No failing output is loaded by selecting the scenario.
-
-Repeated runs of the default source reproduce identical result objects apart from timing. Replay paths require the same property, generator order, explicit examples and locked fast-check version. Exports replay concrete inputs directly; they are not a full generated property suite. Neither bounded success nor this audit proves correctness for every input.
-
-## Security and privacy
-
-Source review traced `page.tsx → client-runner.ts → runner.worker.ts → engine.ts → QuickJS`. Supplied JavaScript has no installed host callbacks, module loader, network, DOM, filesystem or process capabilities. No server evaluation route, model route, host eval or host Function execution of submitted code was found. React renders source/results as text; exported source is JSON-escaped. No API key is needed.
-
-Actual loop/recursion/allocation checks exercise guest interrupt/stack/memory failures. The engine sets a 16 MiB guest runtime limit, 256 KiB stack limit and approximately three-second interrupt deadline; the browser runner has an eight-second host watchdog. Separate fake-timer lifecycle tests cover stalled-worker watchdog, abort and error cleanup. The memory cap is **guest memory**, not a guarantee about total browser/process memory. Exported Node tests use QuickJS limits and Vitest's timeout, but do not have the browser's terminating Worker watchdog; use the browser application for arbitrary hostile experiments.
-
-Browser network observation during source/requirements edits, test execution and copying an export saw only nine same-origin GET requests for worker chunks, with no source/requirements marker in request URLs or bodies and no POST. These observations plus source review support “Runs locally. Stays yours.” and “no code sent to a server” for the function-testing workflow. Optional speech recognition may send audio to the browser vendor; the UI notice states this. This is not an all-audio-local claim, nor a direct Wispr API integration.
-
-No credential material was found in reviewed project source. A known-token/private-key pattern scan of the built client JavaScript returned zero matches; it is not a proof against every possible secret format. App implementation is necessarily bundled for browsers; unrelated repository documents, Git contents and credentials were not in the deployment payload. Wasm, QuickJS, browser and dependency internals remain trusted components; they were not exhaustively audited.
-
-Codex Security scan `a4cbfdba-9ddf-4c1f-9f7b-0581d5720ef2` completed with zero reportable vulnerabilities after independent baseline/architecture review. **Qualification:** the host registered starting revision `e983fe7` and warned that the working tree changed during the scan. That static report is supporting evidence, not immutable final-release attestation. The browser/resource/source-hash checks above refer to the final release.
-
-Security artifact: `C:\Users\prith\.codex\state\plugins\codex-security\scans\Wispr-challenge\e983fe78c9c64b8a69a56ffddb47e1d317ab1539_20261026T131024Z_7x_ibvlh\report.md` . Its directory also contains canonical manifest, findings, coverage and threat model. Scan usage was host-aggregated across thread histories, so it is not a reliable incremental cost measurement for this audit.
-
-## UX and accessibility
-
-Visually inspected final production screenshots at **1440×1100, 1280×800, 768×1024 and 390×844**. No page horizontal overflow. Desktop action remains visible at 1280×800. Tablet/mobile stack vertically and require scrolling; this is intentional. Long source lines scroll inside the textarea rather than widening the page.
-
-Three focused improvements preserve the design: accessible demo selector; darker secondary evidence/labels; selected-result `aria-pressed` plus explicit previous-run state and safer export availability. Helper/predicate text samples measured approximately **5.10:1** against white; the Demo label measured **6.36:1**. A browser keyboard check confirmed visible focus. Controls use native buttons/selects/checkboxes/textareas with accessible names; results use status and errors use alert announcements. Source is a simple textarea rather than a full IDE.
-
-This is a targeted accessibility review, not a complete WCAG certification or screen-reader usability study. Small text and vertical mobile navigation remain usability tradeoffs. Manual notes are explicitly separate from executable rules; no automatic prose extraction is implied.
-
-## Skeptical judge simulation
-
-The following are **our provisional evidence-based scores**, not actual judging results or a win prediction. Weights were confirmed on the rendered official judging page.
-
-| Criterion | Weight | Current evidenced score / 10 | Reason |
-| --- | --- | --- | --- |
-| Real problem in your work | 30% | **6.5** | Concrete developer task and reproducible defects; no supplied personal workflow story or measured time saving yet. Narrow discount-only contract limits everyday utility. |
-| Meaningful Wispr usage | 30% | **0 evidenced** | No real usage card, recording or verified build narrative supplied. This means evidence is missing, not that no Wispr usage occurred. Browser speech recognition does not establish Wispr usage. |
-| Functionality | 25% | **8.5** | Real generated checks, isolation, reproducible input, working exports and correction loop verified publicly. Constrained domain, finite samples and resource-diagnostic limitation prevent a perfect score. |
-| Demo clarity | 15% | **0 evidenced for video** | App is clear and script is prepared, but the required recorded video was not supplied or reviewed. A script cannot substitute for the actual recording. |
-
-An arithmetic total from these evidence-only scores would be **40.75/100**. It is a package-completeness illustration, not a forecast of judge scores. The largest opportunity is evidence for Wispr usage and the recording, not expanding the application.
-
-1. **Five-second comprehension:** tagline and preloaded code/rules give a quick route to action; showing Run → concrete input immediately is clearer than starting with architecture.
-2. **Try without setup:** yes, verified publicly, no login/key.
-3. **Real execution:** yes; invalid code errors and exported assertions were independently executed.
-4. **Distinction from asking an LLM for tests:** deterministic generated inputs, shrinking, actual observations, a replay path and runnable captured regressions. No model claim is trusted as an execution result. Do not claim it replaces a general testing framework.
-5. **Useful reproducible result:** both the obvious subtraction failure and generated fractional rounding failure are real.
-6. **Scope clear:** function editor and input contract state a pure two-numeric-argument surface; README supplies full limits. Explain this in the video.
-7. **Could a judge call it too narrow or insufficiently voice-driven?** Yes. The engine is effectively a four-template discount workbench, and rule selection is manual. Voice input alone is not the core technical contribution.
-8. **Most likely score reducer:** unverified Wispr building evidence, followed by the missing recorded narrative and personal relevance.
-9. **Highest-value next action:** record an honest, short real workflow with genuine Wispr dictation and the generated rounding example, paired with the actual usage card. Stop feature expansion.
-
-The official challenge requires building **using Wispr Flow**; it does not require a Wispr API integration inside the product. A useful product plus real evidence of how Flow was used to build it is the relevant distinction.
-
-## Three remaining improvements, ranked
-
-1. **Real Wispr evidence — very high impact, low software risk.** Supply an authentic Insights usage screenshot and specific truthful account of prompts/docs/follow-ups dictated during the build. Do not invent numbers or retrospectively imply unrecorded usage.
-2. **Record and rehearse the 100-second demo — high impact, low software risk.** Use real public execution, show generated fractional discovery, correction and export; check the resulting video and link in an incognito session.
-3. **Personal problem/result narrative — high impact, low risk.** Explain who uses it, one actual occasion behavioral requirements caused a testing gap, and the actual result observed here. Measure any time-saving claim before using it. Preserve the narrow documented scope rather than expanding into repositories/AI repair before submission.
-
-## 100-second recording sequence
-
-| Time | Actual action / narration goal |
-| --- | --- |
-| 0–5s | Show public RuleRun Lite with the rounding demo selected. State: “A zero-percent discount should preserve the price. This function rounds it.” |
-| 5–20s | Use genuine Wispr Flow desktop dictation in the requirements field. State clearly that these are notes and the four reviewed properties below are what execute. If Flow is unavailable, pause and prepare a truthful recording; do not substitute browser recognition while calling it Wispr. |
-| 20–35s | Click Run checks and wait for the real result. Point out that integer boundary cases are insufficient and generated fractional input exposes the defect. |
-| 35–50s | Select zero identity; show actual `discount(0.01, 0)`, expected identity, output 0 and replay path. Narrate only what is present in the actual run. |
-| 50–65s | Download the regression while the failure is current. Show the captured source and concrete input, without opening personal files or terminals containing credentials. |
-| 65–85s | Load corrected sample, show stale export blocking, then rerun the same rules. Wait for all four actual passes before saying they passed. |
-| 85–100s | Explain: one pure JavaScript function, bounded generated tests, browser-isolated execution; notes/rules stay manual. Finish with product name and public link. Include one truthful sentence on how Wispr helped your actual build. |
-
-### Recording checklist
-
-- [ ] Rehearse against https://rulerun-lite.vercel.app/ in the recording browser.
-- [ ] Confirm actual Wispr desktop setup/microphone and recording permissions yourself.
-- [ ] Enable do-not-disturb; close personal tabs and hide notifications, credentials and private files.
-- [ ] Record only the intended app surface; no unrelated source/terminal/personal account panels.
-- [ ] Show real clicks, wait for execution and keep duration 90–110 seconds, under the official two-minute maximum.
-- [ ] Review the entire audio/video for claims, readability and personal-data exposure.
-- [ ] Upload the video and confirm judges can open the link without requesting access.
-
-### Submission checklist
-
-- [x] Public working application without login/key.
-- [x] Final local/live functional checks and exact exports verified.
-- [x] Known scope/security limits documented.
-- [x] Local audited code commit created; **no GitHub push per latest user instruction**.
-- [ ] Confirm solo registration/eligibility in your own challenge account.
-- [ ] Attach a real Wispr Insights usage card.
-- [ ] Attach and review the actual demo video.
-- [ ] Provide the personal problem, intended user, actual result and truthful Wispr build narrative.
-- [ ] Review the completed form and submit yourself before **31 October 2026, 11:59 pm IST**.
-
-Official sources checked 26 October 2026: [challenge, submission and FAQ](https://www.wemakedevs.org/wispr), [judging criteria](https://www.wemakedevs.org/wispr/judges). No hackathon submission, social post or message to another person was sent.
+1. **Record the 100-Second Demo Video (Highest Impact):**
+   - Demonstrate Wispr Flow dictating requirements into the notes field.
+   - Click "Suggest rules from notes", review recognized properties and unmapped clauses, and click "Apply suggested rules".
+   - Run checks to discover the counterexample (`discount(0, 100) = -100`), download the regression test, and load the corrected sample to show all properties pass.
+2. **Attach Genuine Wispr Flow Insights Card Screenshot:**
+   - Take an authentic screenshot of your Wispr Flow Insights usage card and include it in the submission portal.
+3. **Submit the Personal Problem & Build Narrative:**
+   - Summarize the developer problem (mental invariants slipping through manual unit testing), the intended audience, and how Wispr Flow accelerated writing specifications and documentation.

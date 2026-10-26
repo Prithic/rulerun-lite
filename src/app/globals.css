@@ -7,3 +7,21 @@ body{background:#fff}.code-editor textarea{font-size:13px}.rule select{font-size
 /* Demo selection and readable secondary evidence. */
 .scenario-picker{display:flex;align-items:center;gap:12px;padding:9px 20px;border-top:1px solid var(--border);font-size:12px;color:#526078}.scenario-picker select{min-width:0;flex:1;border:1px solid #d8deea;border-radius:4px;padding:5px;background:white;color:#37445e;font-size:12px}.helper,.rule code,.property-result small,.counterexample-note,.observation span,.call-label,.detail-tabs>span,.result-meta,.input-contract,.exportbar>span{color:#626f83}.rule-disabled{opacity:1;background:#f2f3f7}.scenario-picker label{font-weight:600}@media(max-width:540px){.scenario-picker{padding:9px 15px}.scenario-picker select{font-size:11px}}
 .rules-heading,.rules-heading>span:last-child,.manual-label,.language,.section-number,.detail-tabs button,.empty-results p,.top-caption,.timing,.notice,footer{color:#626f83}.result-banner div>span,.timing{opacity:1}.editor-footer{color:#a4b1ca}
+
+/* Rule suggestion review */
+.requirements-actions{display:flex;justify-content:flex-end;margin-top:6px}
+.suggest-button{font-size:11px;color:#5145dd;background:#f3f1fc;border:1px solid #dcd7f8;border-radius:4px;padding:4px 9px;font-weight:500;gap:6px}
+.suggest-button:hover:not(:disabled){background:#eae6fa;color:#4134c8}
+.suggestion-review{margin-top:10px;padding:12px;background:#f8f9fc;border:1px solid #dce1ee;border-radius:6px;display:flex;flex-direction:column;gap:10px}
+.suggestion-header{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#37445e}
+.suggestion-recognized ul,.suggestion-unmapped ul{margin:5px 0 0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+.suggestion-recognized li{display:flex;align-items:flex-start;gap:7px;font-size:11px;color:#37445e}
+.suggestion-subheading{font-size:10px;font-weight:600;color:#526078;letter-spacing:.5px}
+.matched-phrase{color:#626f83;font-size:10px}
+.suggestion-empty{font-size:11px;color:#8993a4;margin:0}
+.suggestion-unmapped{font-size:11px;color:#7a5a00;background:#fff8e6;border:1px solid #fae8b6;padding:8px;border-radius:4px}
+.suggestion-unmapped code{font-size:10px;font-family:var(--mono);color:#6b5206}
+.suggestion-actions{display:flex;align-items:center;gap:12px;margin-top:4px}
+.primary-small{background:var(--accent);color:#fff;border-radius:4px;padding:5px 10px;font-size:11px;font-weight:500}
+.primary-small:hover:not(:disabled){background:#4134c8}
+
