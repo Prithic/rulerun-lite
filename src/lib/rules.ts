@@ -9,4 +9,5 @@ export function holds(kind: Rule['kind'], price: number, result: number) { if (!
 export const initialRules: Rule[] = kinds.map(kind => ({kind, enabled:true}));
 export const buggy = `function discount(price, percent) {\n  return price - percent;\n}`;
 export const corrected = `function discount(price, percent) {\n  return price * (1 - percent / 100);\n}`;
+export const roundingBug = `function discount(price, percent) {\n  return Math.round(price * (1 - percent / 100));\n}`;
 export const specification = 'The discounted price must never be negative or exceed the original price. A 0% discount keeps the original price. A 100% discount gives a price of zero.';

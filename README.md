@@ -25,6 +25,8 @@ Open http://localhost:3107. For production: `npm run build` then `npm start`.
 
 The corrected sample is a predefined teaching example loaded only by an explicit button; no automatic repair occurs. Edits are kept in memory only. Reset restores the demo.
 
+The **Demo** selector also offers a whole-dollar rounding defect. Its explicit boundary examples pass, but generated fractional prices reveal that rounding changes the price even at 0% discount. For example, `Math.round(0.01) === 0`, which differs from `0.01` by more than the `1e-7` tolerance. The engine discovers and shrinks this case itself; selecting a scenario does not populate results. Both scenarios use the same rules, seed and corrected sample.
+
 ## Supported contract and limits
 
 - One synchronous pure JavaScript function expression: `function discount(price, percent) { ... }` or `(price, percent) => ...`. No exports, imports, files, repository access, or module dependencies.
@@ -33,6 +35,7 @@ The corrected sample is a predefined teaching example loaded only by an explicit
 - Four reviewed templates: non-negative output; 0% identity; 100% zero; output bounded by original price. Equality and upper bound use absolute tolerance `1e-7`; non-negativity is strict. Rules can be enabled/disabled and changed through the selectors. Each kind must be unique.
 - Every enabled property uses fast-check with fixed seed **20261026**, a 200-run budget including fixed boundary examples and deterministic generated integer-backed decimal inputs. Checks stop and shrink on failure, so failed properties execute fewer than 200 main runs; shrinking can execute additional calls. Results display the actual main-run count. Dependency versions are locked for replay stability.
 - A passing bounded property run is evidence, not an exhaustive proof. Floating-point arithmetic applies. The function must be deterministic and free of side effects; arbitrary purity is not statically proven. Date and Math.random are disabled. Each input creates a new function closure; ambient mutation of QuickJS globals is outside the pure-function contract.
+- Finite outputs are validated outside the guest VM, so changing guest intrinsics cannot bypass that check. If a final counterexample rerun passes its property, the engine rejects the inconsistent run rather than displaying it as a failure. This is a consistency guard, not a complete purity proof.
 - Requirements text is intentionally separate from executable templates. Unsupported prose is never silently interpreted or claimed tested.
 
 ## Security boundaries
@@ -57,7 +60,11 @@ npm run build
 
 `verify-ui.mjs` exercises the real browser path with installed Chrome: buggy run, four properties, corrected rerun, stale export blocking, clipboard, downloaded regression, reset, invalid output, disabled/duplicate rules, typed requirements and mobile overflow. Run with a local server: `DEMO_URL=http://localhost:3107 node verify-ui.mjs` (PowerShell: `$env:DEMO_URL='http://localhost:3107'; node verify-ui.mjs`). It creates local QA screenshots and a downloaded test. `node verify-export.mjs` then checks that this exact downloaded export fails on the bug and passes with corrected source. Test configuration keeps these intentional failing export files out of `npm test`.
 
-Set `QA_DIR` to an absolute folder outside the repository to keep browser screenshots and the downloaded test out of source control. The browser script defaults to port 3107, matching `npm start`. The export verifier reads the downloaded test from its working directory and needs access to this project's installed dependencies.
+Set `QA_DIR` to an absolute folder outside the repository to keep browser screenshots and the downloaded test out of source control. Both browser and export verifiers read that same variable. Run the verifiers from this repository; the export helper resolves installed dependencies itself and tests a temporary copy, leaving the original download unchanged. The browser script defaults to port 3107, matching `npm start`.
+
+`node verify-adversarial.mjs` adds malformed/nonfinite/throwing/stateful/resource-exhausting functions, worker cleanup on reset and failure, source/rule stale state, generated rounding inputs, trailing-comment exports, network observation and four viewport sizes. Its `rounding/` and `comment/` downloads can each be checked by setting `QA_DIR` to that subfolder and running `node verify-export.mjs`.
+
+Replay metadata is specific to the rule, exact source, locked fast-check version, generators and supplied examples. `src/lib/adversarial.test.ts` demonstrates passing the reported `path` and seed to the identical property. The UI does not accept a custom seed/path. Exported tests replay the concrete inputs directly and record each discovery path.
 
 ## Architecture and future extraction
 

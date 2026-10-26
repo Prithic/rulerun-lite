@@ -1,3 +1,14 @@
 import type {Rule} from './rules';
 import type {RunResult} from './engine';
-export function execute(source:string,rules:Rule[]):Promise<RunResult>{return new Promise((resolve,reject)=>{const worker=new Worker(new URL('./runner.worker.ts',import.meta.url));const timer=setTimeout(()=>{worker.terminate();reject(new Error('Execution exceeded the 8-second limit. Simplify the function and try again.'));},8000);const finish=()=>{clearTimeout(timer);worker.terminate();};worker.onmessage=e=>{finish();if(e.data.ok)resolve(e.data.value);else reject(new Error(e.data.error));};worker.onerror=()=>{finish();reject(new Error('The isolated runner could not start. Reload and try again.'));};worker.postMessage({source,rules});});}
+export function execute(source:string,rules:Rule[],signal?:AbortSignal):Promise<RunResult>{return new Promise((resolve,reject)=>{
+ if(signal?.aborted){reject(new Error('Run canceled.'));return;}
+ const worker=new Worker(new URL('./runner.worker.ts',import.meta.url));
+ const finish=()=>{clearTimeout(timer);signal?.removeEventListener('abort',cancel);worker.terminate();};
+ const cancel=()=>{finish();reject(new Error('Run canceled.'));};
+ const timer=setTimeout(()=>{finish();reject(new Error('Execution exceeded the 8-second limit. Simplify the function and try again.'));},8000);
+ signal?.addEventListener('abort',cancel,{once:true});
+ worker.onmessage=e=>{finish();if(e.data.ok)resolve(e.data.value);else reject(new Error(e.data.error));};
+ worker.onerror=()=>{finish();reject(new Error('The isolated runner could not start. Reload and try again.'));};
+ worker.onmessageerror=()=>{finish();reject(new Error('The isolated runner returned an unreadable result.'));};
+ try{worker.postMessage({source,rules});}catch(e){finish();reject(e);}
+});}
