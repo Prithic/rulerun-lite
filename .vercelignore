@@ -1,0 +1,8 @@
+node_modules
+.next
+.git
+qa-*.png
+discount.regression.test.ts
+verify-slice.mjs
+export-check.config.ts
+*.tsbuildinfo

@@ -1,0 +1,3 @@
+import type {Rule} from './rules';
+import type {RunResult} from './engine';
+export function execute(source:string,rules:Rule[]):Promise<RunResult>{return new Promise((resolve,reject)=>{const worker=new Worker(new URL('./runner.worker.ts',import.meta.url));const timer=setTimeout(()=>{worker.terminate();reject(new Error('Execution exceeded the 8-second limit. Simplify the function and try again.'));},8000);const finish=()=>{clearTimeout(timer);worker.terminate();};worker.onmessage=e=>{finish();if(e.data.ok)resolve(e.data.value);else reject(new Error(e.data.error));};worker.onerror=()=>{finish();reject(new Error('The isolated runner could not start. Reload and try again.'));};worker.postMessage({source,rules});});}
