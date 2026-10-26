@@ -1,6 +1,6 @@
 # Submission readiness
 
-Latest audit: [FINAL_QA_REPORT.md](FINAL_QA_REPORT.md). The final application has 29 passing unit tests and a verified generated-rounding demo. The submission still needs the manual materials below. Per the latest user instruction, GitHub visibility was left unchanged and audited fixes were not pushed.
+Latest audit: [FINAL_QA_REPORT.md](FINAL_QA_REPORT.md). The current application has 40 passing unit tests, reviewed rule suggestions and a verified generated-rounding demo. The current changes have been pushed to GitHub and deployed to the existing Vercel project at the user's request. Repository visibility is unchanged. The submission still needs the manual materials below.
 
 Checked 26 October 2026 from the standalone Wispr challenge project.
 
@@ -8,12 +8,12 @@ Checked 26 October 2026 from the standalone Wispr challenge project.
 
 - Public demo: https://rulerun-lite.vercel.app (complete browser workflow rechecked without sign-in).
 - Clean locked dependency install; npm audit reported zero vulnerabilities.
-- 12 unit tests, TypeScript check and production build passed.
+- 40 unit tests, TypeScript check and production build passed on the latest source.
 - Local production server and public deployment passed the browser workflow: real failing inputs, corrected rerun, stale export protection, copy/download, reset, invalid-output errors, duplicate/disabled rules, and mobile layout. No browser page errors.
 - Exact downloaded regression: two failures with captured buggy source, two passes after replacing only the function with its correction.
 - Screenshots inspected at 1440 x 1100 and 390 x 844; no mobile horizontal overflow.
 - Browser plugin not available; existing Playwright workflow used installed Chrome. Microphone hardware and Wispr usage were not verified.
-- No old RuleRun Node server or listener on ports 3107/3108 was found. Fresh production server started on 3107.
+- Fresh local production checks used port 3110 to avoid stale assets from an existing server on 3107.
 
 ## Submission package: user materials still needed
 

@@ -3,6 +3,20 @@
 **Date:** 26 October 2026 (IST)  
 **Overall Release Decision: READY WITH LIMITATIONS**
 
+## Latest GitHub / Vercel synchronization
+
+Rechecked and published on 26 October 2026 at the user's request. The newer application implementation is commit `a431ac0`; the release documentation update was pushed as `5365696`. The earlier no-push instruction has been superseded by the request to update GitHub. Repository visibility was left unchanged.
+
+- **40 tests passed** across five suites; type check and production build passed.
+- Normal and adversarial Chrome workflows passed against the fresh local production server (`http://127.0.0.1:3110`) and the updated public alias, including rule-suggestion review/apply, real counterexamples, correction, stale state, error recovery and four viewport sizes.
+- Exact local/public default, rounding and trailing-comment exports each produced two expected property assertion failures on the captured bug and two passes with only source corrected.
+- Production deployment **`dpl_HyfAHF15u8pKiVJT1cJNaacLCVSi`** is READY at https://rulerun-lite.vercel.app/ in the existing `rulerun-lite` Vercel project. All **20 deployed application/configuration source hashes matched local SHA1s**. Reports, screenshots and Git metadata are excluded from the deployment payload.
+- An initial attempt on an already-running port 3107 encountered stale stylesheet assets. Fresh isolated production verification on 3110 passed. The public deployment had no corresponding asset problem.
+- Zero page exceptions or unexpected console warnings in the final adversarial checks. The known QuickJS diagnostic under deliberate recursion exhaustion remains documented below; microphone hardware was not tested.
+- QA screenshots/downloads are outside the repository under `C:\Users\prith\.codex\visualizations\2026\10\26\01a1783b-b5d2-7042-b687-7837adc751aa\sync-local-fresh` and `sync-live`.
+
+The report and submission checklist are synchronized in a subsequent documentation-only commit; deployed runtime source is unchanged by those edits.
+
 The software implementation has passed all automated unit tests, adversarial checks, regression exports, and browser UI tests. The competition submission requires user-provided materials (demo video, Wispr Insights screenshot, and build narrative) which cannot be generated programmatically.
 
 ---
@@ -50,7 +64,7 @@ The software implementation has passed all automated unit tests, adversarial che
 ### D. Single-Compilation Execution Optimization (Step 6)
 - Evaluates function source once into `globalThis.__subject` within the isolated QuickJS context.
 - Property test invocations call `globalThis.__subject(p, d)` directly rather than re-parsing and re-compiling the function AST 800+ times inside QuickJS.
-- Reduces test execution overhead by approximately **45%** (17ms vs 31ms for 800 invocations).
+- Avoids repeated parsing/compilation per case. No new performance benchmark was run during the synchronization check, so no percentage improvement is claimed here.
 
 ### E. JavaScript Input Compatibility (Step 7)
 - Extended signature validation to accept standard variable declarations:
@@ -79,9 +93,9 @@ The software implementation has passed all automated unit tests, adversarial che
 
 ## 4. Public Deployment & Environment
 
-- **Local Production:** Tested and verified on `http://localhost:3107` with Node 22.20.0 and Next.js 16.4.3.
+- **Local Production:** Latest fresh verification used `http://127.0.0.1:3110` with Node 22.20.0 and Next.js 16.4.3.
 - **Public URL:** [https://rulerun-lite.vercel.app](https://rulerun-lite.vercel.app)
-- **Repository Safety:** No Git branches were force-pushed, no remote commits pushed, and repository visibility remains unchanged per instructions.
+- **Repository Safety:** Latest verified changes were pushed at the user's request. No force-push or repository visibility change was performed.
 
 ---
 
